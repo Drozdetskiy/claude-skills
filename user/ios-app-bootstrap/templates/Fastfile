@@ -1,0 +1,64 @@
+APP_IDENTIFIER = "{{BUNDLE_ID}}"
+XCODEPROJ = "{{APP_NAME}}.xcodeproj"
+SCHEME = "{{APP_NAME}}"
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight (CI runs this on every release from main)"
+  lane :beta do
+    setup_ci if ENV["CI"]
+
+    api_key = asc_api_key
+
+    match(type: "appstore", api_key: api_key, readonly: !ENV["CI"].to_s.empty?)
+
+    # App version: semantic-release passes MARKETING_VERSION; manual tag runs
+    # fall back to v1.2.3 -> 1.2.3
+    version = ENV["MARKETING_VERSION"].to_s
+    if version.empty? && (m = ENV["GITHUB_REF_NAME"].to_s.match(/\Av(\d+\.\d+(\.\d+)?)\z/))
+      version = m[1]
+    end
+    increment_version_number(version_number: version, xcodeproj: XCODEPROJ) unless version.empty?
+
+    build_number = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      initial_build_number: 0
+    ) + 1
+    increment_build_number(build_number: build_number, xcodeproj: XCODEPROJ)
+
+    update_code_signing_settings(
+      path: XCODEPROJ,
+      use_automatic_signing: false,
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      code_sign_identity: "Apple Distribution",
+      profile_name: "match AppStore #{APP_IDENTIFIER}",
+      bundle_identifier: APP_IDENTIFIER
+    )
+
+    build_app(
+      scheme: SCHEME,
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: { APP_IDENTIFIER => "match AppStore #{APP_IDENTIFIER}" }
+      }
+    )
+
+    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+  end
+
+  desc "One-time certificate and provisioning profile generation (run locally)"
+  lane :certs do
+    match(type: "appstore", api_key: asc_api_key, readonly: false)
+  end
+
+  private_lane :asc_api_key do
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV.fetch("ASC_KEY_CONTENT"),
+      is_key_content_base64: true
+    )
+  end
+end

@@ -1,0 +1,24 @@
+.env
+build/
+DerivedData/
+*.ipa
+*.dSYM
+*.dSYM.zip
+xcuserdata/
+*.xcuserstate
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output/
+
+# OS / editor
+.DS_Store
+.idea/
+
+# Claude Code (machine-specific — local settings, symlinked skills/agents, worktrees)
+.claude/settings.local.json
+.claude/skills/
+.claude/agents/
+.claude/worktrees/
+
+# Task queue
+.tasks/

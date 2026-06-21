@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The job NAME (not the key) is the `Tests` status check that main's branch
+  # protection requires — keep it exactly "Tests" (see SKILL.md §6).
+  test:
+    name: Tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      # Pin Xcode to the version that recorded your snapshot baselines (pixel
+      # output is per Xcode/iOS-runtime version) — on a runner image that
+      # actually carries it. Bump this only with a deliberate baseline re-record,
+      # and keep it aligned with the "Select Xcode" step in release.yml.
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_NN.N.app
+          xcodebuild -version
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      # Unit + snapshot only — keep XCUITest/E2E targets out of PR CI (macOS
+      # minutes burn at ×10); run them locally before tagging a release.
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -scheme {{APP_NAME}} \
+            -destination 'platform=iOS Simulator,name=iPhone NN,OS=NN.N'

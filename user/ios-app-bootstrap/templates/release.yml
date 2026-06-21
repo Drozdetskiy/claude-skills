@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    branches: [main]        # a feature rebase-merging into main
+  workflow_dispatch:        # re-run build+upload without a new release
+    inputs:
+      version:
+        description: "Marketing version override (e.g. 1.2.3); empty = keep project value"
+        required: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write           # semantic-release pushes the tag and creates the Release
+  issues: write             # @semantic-release/github success step comments on released issues
+  pull-requests: write      # ...and on released PRs — omit and it fails "Resource not accessible by integration"
+
+jobs:
+  release:
+    name: Version, build & upload to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0    # semantic-release needs full history + tags
+
+      # App Store Connect enforces a minimum SDK (typically the latest major,
+      # enforced every April). Runner default Xcode is often older — pick the
+      # newest matching Xcode explicitly. Bump the glob as years pass.
+      - name: Select Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then echo "Required Xcode not on this runner image"; exit 1; fi
+          echo "Selected $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      # v6 of both = Node 24 runtimes (the @v4 majors are deprecated Node 20 actions).
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: semantic-release (version, tag, GitHub Release)
+        id: semrel
+        if: github.event_name == 'push'
+        uses: cycjimmy/semantic-release-action@v6
+        with:
+          # The conventionalcommits preset is a separate npm package,
+          # not bundled with semantic-release.
+          extra_plugins: |
+            conventional-changelog-conventionalcommits
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Build and upload
+        if: steps.semrel.outputs.new_release_published == 'true' || github.event_name == 'workflow_dispatch'
+        run: fastlane beta
+        env:
+          MARKETING_VERSION: ${{ steps.semrel.outputs.new_release_version || github.event.inputs.version }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+
+      # No dev-resync step: a feature branch is deleted right after it
+      # rebase-merges into main, so nothing long-lived survives to diverge from
+      # main — the SHA rewrite rebase-merge performs is harmless once the branch
+      # is gone, and the next feature branches off the new main.

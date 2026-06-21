@@ -1,0 +1,6 @@
+# git_branch MUST match the certs repo default branch (gh repo create --add-readme => main).
+git_url("https://github.com/{{GH_USER}}/{{CERTS_REPO}}.git")
+git_branch("main")
+storage_mode("git")
+type("appstore")
+app_identifier(["{{BUNDLE_ID}}"])
