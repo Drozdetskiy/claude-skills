@@ -1,6 +1,6 @@
 ---
 name: task-pipeline
-description: Drive one task from idea or issue number to a squash-merged task-PR on a feature branch — issue authoring, plan as an issue comment, implementation, size-scaled review gate (diff-reviewer + finding-refuter agents), Conventional-Commit-titled PR, check babysitting via ci-doctor, optional auto-merge. Modes plan / push (default) / auto. Use when asked to take an issue, implement a task, start work on a feature or bug, or run the pipeline in a repo on the semantic-release-on-main model.
+description: Drive one task from idea or issue number to a squash-merged task-PR — issue authoring, plan as an issue comment, implementation, size-scaled review gate (diff-reviewer + finding-refuter agents), a Conventional-Commit PR title you confirm before it opens, check babysitting via ci-doctor, optional auto-merge. Target mode solo (no feature name → PR base = main, the merge is the release, Fixes #N closes the issue) or feature (feature name given → PR base = that branch, ship-feature releases later); autonomy modes plan / push (default) / auto. Use when asked to take an issue, implement a task, start work on a feature, or land a small standalone fix or bug in a repo on the semantic-release-on-main model.
 ---
 
 # Task pipeline (issue → plan → implement → review → PR → feature branch)
@@ -13,7 +13,8 @@ PR, and the task-PR title becomes the commit and the line in the release notes.
 
 A feature branch is a short-lived branch off `main`, **named by the developer**
 (e.g. `dark-mode`); tasks squash into it; it is deleted when it ships. A small,
-standalone change is its own one-task feature.
+standalone change skips the feature branch entirely — **`solo` mode** (below)
+targets `main` directly, so its single PR is also its release.
 
 ## Modes
 
@@ -24,13 +25,32 @@ Mode comes from the invocation (e.g. `/task-pipeline 42 dark-mode --auto`);
 |---|---|---|
 | `plan` | issue + plan comment | before any code — user approves the plan, re-invoke to continue |
 | `push` (default) | PR open, checks driven to green | before merge — merge is the user's call |
-| `auto` | squash-merge into the feature branch | only for what the user alone can provide |
+| `auto` | squash-merge the task PR (→ `main` = release in `solo`; → the feature branch in `feature`) | only for what the user alone can provide |
 
 `auto` is never fully unattended: secret VALUES always come from the user
 (config-first — see ship-feature), and a review-gate critical the pipeline cannot
 fix safely is a stop, not a guess. Everything else — red checks, refuted
-findings, rebases — it handles itself. `auto` ends at the feature branch; it does
-NOT ship (that is ship-feature, a separate decision).
+findings, rebases — it handles itself. In `feature` mode `auto` ends at the feature
+branch; it does NOT ship (that is ship-feature, a separate decision). In `solo` mode
+there is no separate ship — `auto`'s merge to `main` IS the release (see Target mode).
+
+## Target mode — solo or feature
+
+Where the task-PR lands, and therefore what a merge *means*. Set by the invocation:
+**a feature name → `feature` mode; no feature name (or `--solo`) → `solo` mode.**
+feature-cycle always passes a feature name, so a chained task is always `feature`;
+this knob only changes the standalone case.
+
+- **`feature`** — PR base = the developer-named feature branch; merge squashes the
+  task onto it and ships NOTHING. The work reaches `main` later, in one release, via
+  ship-feature. Right when several tasks batch into one release. (The original
+  behaviour — every feature-branch detail in steps 3/5/8/9/10 is this mode.)
+- **`solo`** — the task IS the change: PR base = `main`, so the merge runs
+  semantic-release and IS the release — no ship-feature, no second PR. Right for a
+  small standalone fix or feature that doesn't batch. Because base is the default
+  branch: the PR body uses `Fixes #N` (the issue auto-closes on merge) and
+  `config-preflight` runs on THIS PR — so a new config key's value must be in place
+  before merge, not deferred to ship.
 
 ## Execution mode — coupled (default) or isolated
 
@@ -71,9 +91,10 @@ clean one.
    with the problem, acceptance criteria, and constraints. Write the body so a
    fresh session could implement from it alone (task-handoff-spec discipline:
    decisions WITH rationale, not just conclusions).
-3. **Feature branch**: determine which feature this task belongs to — the
-   developer names it (passed in the invocation, or ask). Start it from fresh
-   `main` if it does not exist yet:
+3. **Feature branch** (`feature` mode only — `solo` has none; skip to step 5, where
+   the task branch comes straight off `main`): determine which feature this task
+   belongs to — the developer names it (passed in the invocation, or ask). Start it
+   from fresh `main` if it does not exist yet:
    `git fetch && git switch main && git pull && git switch -c <feature> && git push -u origin <feature>`.
    If it exists, `git switch <feature> && git pull`. Do NOT open the feature→`main` PR during
    the chain — an open PR re-runs its checks (`test` + `config-preflight`) on every
@@ -85,9 +106,9 @@ clean one.
    tests, risks, and any decision taken with its why. The issue thread is the
    spec's home: branch and PR link back to it. In `plan` mode — stop here with the
    comment link.
-5. **Branch**: `gh issue develop <N> --base <feature> --checkout` — GitHub creates
-   `<N>-<slug>` from the feature branch and links it to the issue's Development
-   section.
+5. **Branch**: `gh issue develop <N> --base <BASE> --checkout` — BASE is the feature
+   branch (`feature` mode) or `main` (`solo` mode); GitHub creates `<N>-<slug>` from
+   BASE and links it to the issue's Development section.
 6. **Implement — `coupled` (default) or `isolated`** (see Execution mode): in
    `coupled` mode the main loop writes the code + tests directly, carrying the
    feature's running context. In `isolated` mode, dispatch one `task-implementer`
@@ -110,42 +131,54 @@ clean one.
    refutation (see Execution mode for WHERE the fix goes), re-run tests. In `auto`
    mode this gate substitutes for human review — do not skip it for "trivial"
    changes that touch risky surface.
-8. **Task-PR**: base = the feature branch. Title = Conventional Commit
-   (`feat:`/`fix:`/…, breaking → `!`) — this exact string becomes the commit on
-   the feature branch and the changelog line, so write it for the release-notes
-   reader. Body: a summary for the reviewer + a link to the issue (`Task #N` /
-   `Part of #N`, NOT `Fixes #N` — the feature branch isn't the default branch, so
-   a closing keyword would not fire on this merge). Push, `gh pr create --base
-   <feature>`. The PR-title lint also runs on `edited` — fix the title, not the
-   lint.
+8. **Task-PR**: base = the feature branch (`feature` mode) or `main` (`solo` mode).
+   Title = Conventional Commit (`feat:`/`fix:`/…, breaking → `!`) — this exact string
+   becomes the squash commit and the changelog line, so write it for the
+   release-notes reader. **Propose the title and confirm it with the developer before
+   opening the PR** — show the line, accept an edit; a `--title` passed in the
+   invocation pre-seeds the proposal. It must stay a valid Conventional Commit or
+   semantic-release won't version it: validate the (possibly edited) string before
+   `gh pr create`, don't let a free-form title through. Body: a summary for the
+   reviewer + the issue link — `solo` uses `Fixes #N` (base is the default branch, so
+   the merge auto-closes the issue); `feature` uses `Task #N` / `Part of #N` (NOT
+   `Fixes #N` — the feature branch isn't the default branch, so a closing keyword
+   would not fire on this merge). Push, `gh pr create --base <BASE>`. The PR-title
+   lint also runs on `edited` — fix the title, not the lint.
 9. **Checks**: `gh pr checks --watch`. Red → diagnose with `ci-doctor`: flake →
-   rerun; real → fix on the branch and push. Note any NEW config keys the task
-   introduces for the report — the `config-preflight` check itself runs on the
-   feature→`main` PR (a ship-feature concern), not here. In `push` mode — stop
-   here: PR link, checks green, merge is the user's.
-10. **Merge** (`auto` only): `gh pr merge --squash --delete-branch` into the
-    feature branch — squash puts the title-only commit on the feature branch; the
-    task branch is auto-deleted. Then **close the task issue explicitly**
-    (`gh issue close <N> --reason completed`) — the feature branch is not the
-    default, so GitHub will not auto-close it. `git switch <feature> && git pull`.
+   rerun; real → fix on the branch and push. New config keys: in `feature` mode
+   `config-preflight` runs later on the feature→`main` PR (a ship-feature concern),
+   so just note them for the report; in `solo` mode it runs on THIS PR, so the key's
+   value must be in place before the checks can go green — surface it to the
+   developer now, don't defer. In `push` mode — stop here: PR link, checks green,
+   merge is the user's.
+10. **Merge** (`auto` only — in `push` your merge does this, with the same effect):
+    `gh pr merge --squash --delete-branch`. In `feature` mode this squashes the
+    title-only commit onto the feature branch (ships nothing) and you must **close
+    the task issue explicitly** (`gh issue close <N> --reason completed`) — the
+    feature branch isn't the default, so GitHub won't auto-close it; then
+    `git switch <feature> && git pull`. In `solo` mode this squashes onto `main`,
+    which **is the release** — semantic-release runs, `Fixes #N` auto-closes the
+    issue, the branch auto-deletes; then `git switch main && git pull`.
 11. **Report** (every mode): final state + PR/issue links, what survived or died
-    in the review gate, and — always — any config keys the task introduced:
-    "values for X, Y needed before <feature> ships". Never let a key reach a
-    shippable feature unannounced.
+    in the review gate, and — always — any config keys the task introduced. In
+    `feature` mode phrase keys as "values for X, Y needed before <feature> ships"
+    (never let a key reach a shippable feature unannounced); in `solo` mode they
+    were already required for this PR's checks, so report them as in-place or as the
+    blocker, and state that the merge releases (or has released) directly to `main`.
 
 ## Hotfix
 
-A prod emergency is just a one-task feature branched straight from `main`:
-`gh issue develop <N> --base main --checkout`, fix, FULL-depth review regardless
-of size, then ship immediately (ship-feature). There is no long-lived branch to
-reconcile and no resync — other in-flight feature branches simply
-`git rebase origin/main` when convenient after the hotfix ships.
+A prod emergency is `solo` mode with the review dial forced up: `--solo`, FULL-depth
+review regardless of diff size, merge straight to `main` = released immediately. No
+long-lived branch to reconcile and no resync — other in-flight feature branches
+simply `git rebase origin/main` when convenient after the hotfix ships.
 
 ## Gotchas
 
-- **The pipeline ends at the feature branch, deliberately.** Merging a task
-  deploys nothing; shipping the feature is a separate decision (ship-feature). Do
-  not "helpfully" ship in `auto` mode.
+- **In `feature` mode the pipeline ends at the feature branch, deliberately** —
+  merging a task deploys nothing; shipping the feature is a separate decision
+  (ship-feature), so don't "helpfully" ship in `auto`. In `solo` mode the opposite
+  holds: the merge IS the ship, so there is nothing more to do afterward.
 - **Execution mode (`coupled`/`isolated`) is WHO writes; autonomy
   (`plan`/`push`/`auto`) is HOW FAR — they compose.** `auto`+`isolated` = a fresh
   `task-implementer` writes the task, the gate clears it, it auto-merges. In
@@ -154,9 +187,10 @@ reconcile and no resync — other in-flight feature branches simply
 - **Issue titles vs PR titles carry different things**: issue = imperative
   description of the work; PR = conventional commit for the changelog. Copying the
   issue title into the PR usually produces a bad changelog line.
-- **Task issues don't auto-close** — the task PR merges into the feature branch,
-  not the default branch, so close them explicitly (step 10). The work reaches
-  `main` later, when the feature ships.
+- **In `feature` mode task issues don't auto-close** — the task PR merges into the
+  feature branch, not the default branch, so close them explicitly (step 10); the
+  work reaches `main` later, when the feature ships. (In `solo` mode the PR targets
+  `main`, so `Fixes #N` closes the issue on merge — nothing to close by hand.)
 - **task = issue; the feature branch is developer-named** — don't invent a
   feature-level issue or derive the branch name from the task issue.
 - After a sibling feature ships, in-flight feature branches sit on an older

@@ -34,7 +34,7 @@ Two scopes:
 
 | Skill | Use for |
 |---|---|
-| [`task-pipeline`](project/task-pipeline/SKILL.md) | Drive one task from idea/issue to a squash-merged task-PR on a developer-named feature branch: issue authoring, plan as issue comment, size-scaled review gate, CC-titled PR, check babysitting, optional auto-merge; modes plan / push / auto |
+| [`task-pipeline`](project/task-pipeline/SKILL.md) | Drive one task from idea/issue to a squash-merged task-PR: issue authoring, plan as issue comment, size-scaled review gate, a CC PR title you confirm before it opens, check babysitting, optional auto-merge; target mode solo (no feature name → PR base = main, the merge is the release, Fixes #N closes the issue) or feature (feature name → PR base = that branch, ship-feature releases later); autonomy modes plan / push / auto |
 | [`ship-feature`](project/ship-feature/SKILL.md) | Ship a finished feature branch to main: config preflight (diff new settings, verify/apply each layer), rebase-merge feature→main, watch semantic-release/deploy/smoke, recover from red smoke without a new version |
 | [`feature-cycle`](project/feature-cycle/SKILL.md) | Drive a whole feature idea to a ready-to-ship branch: decompose into an ordered task chain (feature-decomposer), approve it once, run each task through task-pipeline sequentially and autonomously (auto-merge on green, self-heal red), aggregate config keys, stop at the ship gate; modes auto / push |
 | [`ios-localization`](project/ios-localization/SKILL.md) | Localize an iOS app + its App Store listing into N languages: language-store plumbing, agent fan-out translation with per-language register rules, economical fixture/snapshot policy, ASC name-availability check, metadata-only deliver |
