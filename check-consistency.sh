@@ -10,9 +10,9 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Files that must carry a byte-identical "## Branching & merging" paste-block.
 BLOCK_FILES=(
-  "user/backend-repo-bootstrap/SKILL.md"
-  "user/ios-app-bootstrap/SKILL.md"
-  "user/python-library-bootstrap/SKILL.md"
+  "skills/backend-repo-bootstrap/SKILL.md"
+  "skills/ios-app-bootstrap/SKILL.md"
+  "skills/python-library-bootstrap/SKILL.md"
 )
 
 # Print the fenced "## Branching & merging" block of $1: from the header line

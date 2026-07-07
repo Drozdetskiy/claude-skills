@@ -8,7 +8,7 @@ description: Multi-agent adversarial review of a branch diff — parallel lens r
 Battle-tested playbook (a production repo, 2026-06: 24 agents over a ~60-file diff → 12 confirmed findings incl. 2 majors fixed before merge; 8 plausible-sounding findings refuted with line-level evidence). Runs on the Claude Code `Workflow` tool.
 
 Reviewers and verifiers run as the library's named agents (`diff-reviewer`,
-`finding-refuter` — `agents/user/`, linked by `install.sh --user`): the agent
+`finding-refuter` — `agents/`, linked by `install.sh`): the agent
 files carry the role discipline, the prompts below carry the diff-specific
 pointers. If the agents are not installed, drop the `agentType` options — the
 prompts are self-sufficient.

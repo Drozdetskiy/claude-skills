@@ -34,7 +34,7 @@ backend skill:
 9. PyPI Trusted Publishing: pending publisher + GitHub Environment (manual, browser) (§8)
 10. Release `release.yml`: semantic-release → build at the tag → Trusted-Publish (§9)
 11. Verification (every layer), including a TestPyPI dry-run
-12. Repo-local Claude config: commit `.claude/settings.json` and wire project skills via `project-skills-init` (§2a; the machine-specific `.claude/*` is gitignored in §1)
+12. Repo-local Claude config: commit `.claude/settings.json`; keep the machine-specific `.claude/*` gitignored (§1, §2a)
 
 ## 0. Decisions to confirm with the user first
 
@@ -200,10 +200,9 @@ PostToolUse hook that keeps a derived file in sync — the library analogue of t
 ```
 
 Keep `settings.json` to a *safe* allowlist (no `gh`/`git` write commands, no blanket `Bash(*)`);
-machine- or person-specific grants belong in the gitignored `.claude/settings.local.json`. After the
-repo exists, wire the project skills (`ship-feature`, `task-pipeline`, any domain skills) via the
-**`project-skills-init`** skill — it symlinks them under `.claude/skills/` (gitignored in §1),
-so they are never committed.
+machine- or person-specific grants belong in the gitignored `.claude/settings.local.json`. The skills
+library itself is installed once per machine (`install.sh`), so `ship-feature`, `task-pipeline`, and the
+domain skills are already available in every session — nothing to wire per-repo.
 
 ## 3. `pyproject.toml` — the library-specific shape
 
