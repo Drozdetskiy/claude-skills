@@ -69,12 +69,14 @@ anytime; only NEW sessions re-read the skill/agent list.
 - No `model:` pins in frontmatter — skills inherit the session model.
 - Every gotcha listed cost real debugging time; keep it that way.
 - Several long-lived literals are multi-homed across the three bootstraps (+
-  `gh-fork-safety`) rather than living in one place: the feature-branch / squash+rebase
-  merge model, the CLAUDE.md "Branching & merging" paste-block (asserted byte-identical
-  in all three — diff them, don't eyeball; `./check-consistency.sh` enforces it), the
-  gh-2.93 squash-merge REST-PATCH one-liner, the PR-title-lint event/scope rule, and
-  `.releaserc`. When any changes, grep ALL skills for the OLD literal before committing
-  — desync between skills is a recurring bug.
+  `gh-fork-safety`) rather than living in one place: the CLAUDE.md "Branching &
+  merging" paste-block, `.releaserc`, the gh-2.93 squash-merge REST-PATCH one-liner,
+  the feature-branch / squash+rebase merge model, and the PR-title-lint event/scope
+  rule. `./check-consistency.sh` enforces the first three mechanically (byte-identical
+  paste-block and `.releaserc` across the bootstraps; intact `PR_TITLE`/`BLANK`
+  fragments wherever the REST-PATCH appears) — run it before committing a change to
+  any multi-homed literal. The prose rules it cannot check: grep ALL skills for the
+  OLD literal before committing — desync between skills is a recurring bug.
 - The skill content a session serves is a SNAPSHOT taken at session start — a
   session that outlives a library commit keeps quoting the old text. When editing
   or fact-checking skills mid-session, always go through the library repo path
