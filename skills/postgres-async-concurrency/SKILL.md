@@ -8,7 +8,7 @@ description: Audit and design concurrency and idempotency in an async SQLAlchemy
 Battle-tested playbook (a production backend, 2026-06: a 24-agent adversarial diff
 review + several prod race incidents). Every item passed the full test suite — these bugs
 only appear under concurrency, so a green run proves nothing. Pair this with the
-`concurrency` lens of [adversarial-diff-review].
+`correctness` (correctness/concurrency) lens of [adversarial-diff-review].
 
 ## The EvalPlanQual FOR UPDATE trap (READ COMMITTED)
 

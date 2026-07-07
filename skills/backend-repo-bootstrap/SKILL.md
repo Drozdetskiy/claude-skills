@@ -249,6 +249,9 @@ Add a PR-title lint (commitlint or `amannn/action-semantic-pull-request`) on the
 payload, so the write-scoped token `pull_request_target` grants buys nothing and
 needlessly exposes secrets to PR-head context. Trigger on `opened|edited|synchronize`
 — without the `edited` event a PR can be renamed to garbage after the check went green.
+Give the job **`permissions: { pull-requests: read }`** — the v6 action fetches the PR
+through the API (not just the event payload), so without it the check fails with
+`Resource not accessible by integration` on every PR.
 Scope it to PRs whose base is NOT `main` (`branches-ignore: [main]`): the CC titles
 live on task→feature PRs; a feature→`main` PR title is freeform and discarded by the
 rebase merge, so linting it is pure noise. Keep this check **advisory — do NOT add it

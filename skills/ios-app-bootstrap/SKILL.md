@@ -67,7 +67,10 @@ the highest type in the batch. Add a PR-title lint on the `pull_request` event (
 `pull_request_target` — the title is in the event payload, so the write-scoped token it
 grants buys nothing and needlessly exposes secrets to PR-head context), triggered on
 `opened|edited|synchronize` (the `edited` event stops rename-after-green), scoped to PRs
-whose base is NOT `main` (`branches-ignore: [main]`). Keep it advisory — do NOT add it to
+whose base is NOT `main` (`branches-ignore: [main]`). Give the job
+**`permissions: { pull-requests: read }`** — the v6 action fetches the PR through the
+API (not just the event payload), so without it the check fails with
+`Resource not accessible by integration` on every PR. Keep it advisory — do NOT add it to
 `main`'s `required_status_checks` (it never runs on feature → `main` PRs, so requiring it
 would deadlock every feature → `main` merge; task → feature PRs target unprotected feature
 branches, so nothing enforces it there regardless). Add `.releaserc` at the repo root:

@@ -1,14 +1,13 @@
 ---
 name: session-retro
-description: Mine Claude Code session transcripts for reusable knowledge — analyze the current session, a named session, or all recent sessions, and propose what to capture as a new SKILL or an auto-memory entry (NOT a wiki — that is the wiki-* skills' job). Extracts the human-typed prompts with jq instead of reading whole transcripts, filters out programmatic sdk-cli runs, clusters recurring asks, and checks every candidate against the existing skill library so it never proposes a duplicate. Use at the end of a working session, when you notice you keep re-asking for the same multi-step thing, or periodically to harvest the last day or two of sessions.
+description: Mine Claude Code session transcripts for reusable knowledge — analyze the current session, a named session, or all recent sessions, and propose what to capture as a new SKILL or an auto-memory entry. Extracts the human-typed prompts with jq instead of reading whole transcripts, filters out programmatic sdk-cli runs, clusters recurring asks, and checks every candidate against the existing skill library so it never proposes a duplicate. Use at the end of a working session, when you notice you keep re-asking for the same multi-step thing, or periodically to harvest the last day or two of sessions.
 ---
 
 # Session retro (mine sessions → skill + memory candidates)
 
 Battle-tested: distilled from the recurring "проанализируй сессию — что вынести в скил
 или память?" ask, which recurred across ~10 sessions in two days (and is the workflow
-this skill replaces). The output is **skill candidates + memory entries only** —
-routing knowledge into a wiki is a separate concern (`wiki-*`).
+this skill replaces). The output is **skill candidates + memory entries only**.
 
 ## Two modes
 
