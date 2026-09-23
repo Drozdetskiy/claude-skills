@@ -201,8 +201,8 @@ PostToolUse hook that keeps a derived file in sync — the library analogue of t
 
 Keep `settings.json` to a *safe* allowlist (no `gh`/`git` write commands, no blanket `Bash(*)`);
 machine- or person-specific grants belong in the gitignored `.claude/settings.local.json`. The skills
-library itself is installed once per machine (`install.sh`), so `ship-feature`, `task-pipeline`, and the
-domain skills are already available in every session — nothing to wire per-repo.
+library itself is installed once per machine (`install.sh`), so its skills are already available in
+every session — nothing to wire per-repo.
 
 ## 3. `pyproject.toml` — the library-specific shape
 

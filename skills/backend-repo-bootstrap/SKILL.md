@@ -130,10 +130,10 @@ The DSN in `.env.test` hits `localhost:5432` = this container. No mocked DB.
 ### config-preflight — advisory, on feature→`main` PRs
 
 A separate workflow `.github/workflows/config-preflight.yml` is the `config-preflight`
-check the operational skills (ship-feature / task-pipeline / feature-cycle) refer to — the
-FIRST config-first enforcement layer (the enforcing one is the release job's config gate,
-§12). Diff-only, **no cloud access**: a PR-event job's OIDC sub is `refs/pull/*` and must
-not pass the deploy role's trust policy (scoped to `refs/heads/main`) — don't widen it.
+check — the FIRST config-first enforcement layer (the enforcing one is the release job's
+config gate, §12). Diff-only, **no cloud access**: a PR-event job's OIDC sub is
+`refs/pull/*` and must not pass the deploy role's trust policy (scoped to
+`refs/heads/main`) — don't widen it.
 
 ```yaml
 name: Config preflight
@@ -374,7 +374,7 @@ Triggered by `push: branches: [main]` — i.e. by a feature rebase-merging into 
 }
 ```
 
-Decisions encoded there: the **changelog lives in GitHub Releases ONLY** — no `@semantic-release/changelog`/`git` back-commits (they fight branch protection; regenerate a file on demand with `conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0`); `"branches": ["main"]` alone — releases come only from `main`, no prerelease channel (this model has no long-lived integration branch to attach one to); the default `GITHUB_TOKEN` is enough precisely because nothing is triggered BY the tag — deploy runs in-job. A `chore:`/`ci:`-only feature publishes nothing and the deploy/smoke steps are skipped — that's what `workflow_dispatch` is for: re-running gate+deploy+smoke for the current version (resolve its tag with `git describe --tags --abbrev=0` under `if: github.event_name == 'workflow_dispatch'`, e.g. after applying missing config or fixing a broken smoke script). Gate **deploy and smoke** (and their buildx/qemu prerequisites) on `if: steps.tag.outputs.tag != ''` (the `Resolve deploy tag` step sets it for a released push or a dispatch) — but run the **config gate** (ship-feature skill, "Enforcement layers") and its AWS/SSH/toolchain setup on EVERY run, ungated: a no-release feature merge still re-checks that the instance config covers the settings class on `main`, so drift surfaces on the next merge instead of mid-release:
+Decisions encoded there: the **changelog lives in GitHub Releases ONLY** — no `@semantic-release/changelog`/`git` back-commits (they fight branch protection; regenerate a file on demand with `conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0`); `"branches": ["main"]` alone — releases come only from `main`, no prerelease channel (this model has no long-lived integration branch to attach one to); the default `GITHUB_TOKEN` is enough precisely because nothing is triggered BY the tag — deploy runs in-job. A `chore:`/`ci:`-only feature publishes nothing and the deploy/smoke steps are skipped — that's what `workflow_dispatch` is for: re-running gate+deploy+smoke for the current version (resolve its tag with `git describe --tags --abbrev=0` under `if: github.event_name == 'workflow_dispatch'`, e.g. after applying missing config or fixing a broken smoke script). Gate **deploy and smoke** (and their buildx/qemu prerequisites) on `if: steps.tag.outputs.tag != ''` (the `Resolve deploy tag` step sets it for a released push or a dispatch) — but run the **config gate** (verify every settings key is present on the instance BEFORE deploying, failing fast while the old container still serves) and its AWS/SSH/toolchain setup on EVERY run, ungated: a no-release feature merge still re-checks that the instance config covers the settings class on `main`, so drift surfaces on the next merge instead of mid-release:
 
 ```yaml
       - uses: aws-actions/configure-aws-credentials@v6
