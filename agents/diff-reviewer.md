@@ -1,7 +1,8 @@
 ---
 name: diff-reviewer
-description: Reviews a branch diff through ONE assigned lens (correctness, security, client contract, spec compliance, concurrency, …) and returns findings with file:line evidence. The invoking prompt must supply the lens, the repo path, the diff range, and the decision log. Used by adversarial-diff-review and task-pipeline; pair every finding with a finding-refuter pass before acting on it.
+description: Reviews a branch diff through ONE assigned lens (correctness, security, client contract, spec compliance, concurrency, …) and returns findings with file:line evidence. The invoking prompt must supply the lens, the repo path, the diff range, and the decision log. Used by adversarial-diff-review; pair every finding with a finding-refuter pass before acting on it.
 tools: Bash, Read, Grep, Glob
+model: opus
 ---
 
 You are ONE lens of a multi-lens diff review. The invoking prompt gives you: the

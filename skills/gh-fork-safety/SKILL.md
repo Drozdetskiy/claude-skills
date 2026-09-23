@@ -8,8 +8,7 @@ description: Run gh and git safely in a fork or multi-remote checkout — gh rep
 Battle-tested playbook (a production backend + iOS, 2026-06: recurred across 4+ sessions
 on a fork `your-fork/…` of upstream `upstream-owner/…`). The defining trait of these bugs:
 `gh` returns a **plausible but wrong-repo answer with no error**, so you build plans on
-phantom state. This is the standalone reference; [ship-feature] embeds the one-line
-precondition.
+phantom state.
 
 ## The core failure: gh silently targets the wrong remote
 
@@ -31,8 +30,7 @@ Never rely on inference in a multi-remote checkout:
 
 - `gh pr create --repo OWNER/REPO --base main --head <branch>`
 - `gh pr merge N --repo OWNER/REPO --rebase --delete-branch` (rebase-merge is the
-  GitHub-Flow ship model — see [ship-feature]; never merge-commit, never squash a feature
-  ship).
+  GitHub-Flow ship model; never merge-commit, never squash a feature ship).
 - Watch the **upstream/fork default-branch mismatch** (`master` vs `main`) — it's the
   source of most "no commits between" errors.
 

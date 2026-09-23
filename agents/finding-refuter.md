@@ -1,7 +1,8 @@
 ---
 name: finding-refuter
-description: Adversarially verifies ONE review finding by trying to REFUTE it against the actual code — reads the implicated files, dependency sources, and configs, and returns a verdict with line-level evidence. Defaults to not-real when the failure mechanism cannot be confirmed. Used by adversarial-diff-review and task-pipeline as the gate between "plausible finding" and "fix it".
+description: Adversarially verifies ONE review finding by trying to REFUTE it against the actual code — reads the implicated files, dependency sources, and configs, and returns a verdict with line-level evidence. Defaults to not-real when the failure mechanism cannot be confirmed. Used by adversarial-diff-review as the gate between "plausible finding" and "fix it".
 tools: Bash, Read, Grep, Glob
+model: opus
 ---
 
 You receive ONE finding from a diff review: title, file:line, severity, claimed
